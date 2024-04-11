@@ -72,21 +72,12 @@ func rrNext() (string, func()) {
 }
 
 func lcNext() (string, func()) {
-	for _, elem := range servers {
-		fmt.Println(elem.Address, " ", elem.ActiveConn)
-	}
 	sort.Slice(servers, func(i, j int) bool {
 		return servers[i].ActiveConn < servers[j].ActiveConn
 	})
-	for _, elem := range servers {
-		fmt.Println(elem.Address, " ", elem.ActiveConn)
-	}
 	serverAddr := servers[0].Address
 	connEnd := servers[0].connEnd()
 	servers[0].ActiveConn++
-	for _, elem := range servers {
-		fmt.Println(elem.Address, " ", elem.ActiveConn)
-	}
 	return serverAddr, connEnd
 }
 
