@@ -20,7 +20,9 @@ func main() {
 		return
 	}
 	fmt.Println("Proxy running ...")
-	serveConcurrRequest(welcSock.Accept())
+	for {
+		serveConcurrRequest(welcSock.Accept())
+	}
 }
 func serveConcurrRequest(clientConnSock net.Conn, err error) {
 
@@ -36,8 +38,8 @@ func serveConcurrRequest(clientConnSock net.Conn, err error) {
 	}
 
 	//---------- Call a backend server and send it HTTP request from client ---------//
-
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", balancer.GetNextServer(balancer.RR))
+	serverAddr, ConnEnd := balancer.GetNextServer(balancer.LC)
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", serverAddr)
 	if err != nil {
 		return
 	}
@@ -55,6 +57,7 @@ func serveConcurrRequest(clientConnSock net.Conn, err error) {
 		return
 	}
 	err2 := backendConnSock.Close()
+	ConnEnd()
 	if err2 != nil {
 		return
 	}
