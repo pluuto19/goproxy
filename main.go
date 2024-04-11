@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
+	"loadbalancerproxy/balancer"
 	"net"
 )
 
 const bufSize = 1536
 
-var backendServers = []string{"localhost:8008"}
-
 func main() {
+	balancer.Init()
+
 	serverSpec, err := net.ResolveTCPAddr("tcp", "localhost:8080")
 	if err != nil {
 		return
 	}
-	welcSock, err := net.ListenTCP("tcp", serverSpec) //welcoming socket takes in a
-	if err != nil {                                   //server specification struct
+	welcSock, err := net.ListenTCP("tcp", serverSpec) //welcoming socket takes in a server specification struct
+	if err != nil {
 		return
 	}
 	fmt.Println("Proxy running ...")
@@ -36,7 +37,7 @@ func serveConcurrRequest(clientConnSock net.Conn, err error) {
 
 	//---------- Call a backend server and send it HTTP request from client ---------//
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", backendServers[0])
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", balancer.GetNextServer(balancer.RR))
 	if err != nil {
 		return
 	}
@@ -68,3 +69,4 @@ func serveConcurrRequest(clientConnSock net.Conn, err error) {
 }
 
 // loop or no loop because of Transport Layer segmentation
+// race condition on balancer.GetNextServer()

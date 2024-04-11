@@ -1,0 +1,23 @@
+[
+  {
+    "address" : "localhost:8008"
+  },
+  {
+    "address" : "localhost:8009"
+  },
+  {
+    "address" : "localhost:8010"
+  },
+  {
+    "address": "localhost:8001"
+  },
+  {
+    "address" : "localhost:8002"
+  },
+  {
+    "address" : "localhost:8003"
+  },
+  {
+    "address" : "localhost:8004"
+  }
+]
