@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,7 @@ const LC = 2
 
 var servers []server             // contains all server addresses from the JSON and their current active connection/s
 var serverStream chan ServerConn // for sharing only the server addresses and closures for decreasing the active connection count
+var mut sync.RWMutex
 
 type server struct {
 	Address    string `json:"address"`
@@ -60,7 +62,7 @@ func Init(method int) chan ServerConn {
 	if err1 != nil {
 		fmt.Println(err1)
 	}
-	go healthCheckInit(servers)
+	go healthCheckInit(servers, &mut)
 	getNextServer(method)
 
 	return serverStream
@@ -69,10 +71,10 @@ func Init(method int) chan ServerConn {
 func getNextServer(method int) {
 	switch method {
 	case RR:
-		go roundRobinInit(serverStream, servers)
+		go roundRobinInit(serverStream, servers, &mut)
 		break
 	case LC:
-		go leastConnInit(serverStream)
+		go leastConnInit(serverStream, servers, &mut)
 		break
 	default:
 		break
