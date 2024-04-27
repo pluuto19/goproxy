@@ -39,9 +39,17 @@ func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock n
 		return
 	}
 
-	serverConn, ok := <-serverStream
-	if !ok {
-		return
+	// pull from the queue until an online server is fetched
+
+	var isServerOnline bool
+	var serverConn balancer.ServerConn
+	for !isServerOnline {
+		serverConnQueue, ok := <-serverStream
+		if !ok {
+			return
+		}
+		serverConn = serverConnQueue
+		isServerOnline = *serverConn.IsOnline
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", serverConn.ServerAddr)
@@ -49,11 +57,15 @@ func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock n
 		fmt.Println(err)
 		return
 	}
+
 	backendConnSock, err := net.DialTCP("tcp4", nil, tcpAddr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	(*serverConn.ConnBegin)() // increment after resolving the address, when the actual connection is established
+
 	_, err1 := backendConnSock.Write(clientRecvBuffer[0:n])
 	if err1 != nil {
 		fmt.Println(err1)

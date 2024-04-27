@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func healthCheckInit(servers []server, mut *sync.RWMutex) {
+func healthCheckInit(servers []server, onlineMut *sync.RWMutex) {
 	for {
 		for i := range servers {
 			respBuffer := make([]byte, 1024)
@@ -38,17 +38,17 @@ func healthCheckInit(servers []server, mut *sync.RWMutex) {
 			}
 
 			if !strings.Contains(string(respBuffer[:n]), "200") {
-				mut.Lock()
+				onlineMut.Lock()
 				servers[i].Online = false
-				mut.Unlock()
+				onlineMut.Unlock()
 			} else {
-				mut.RLock()
+				onlineMut.RLock()
 				isOnline := servers[i].Online
-				mut.RUnlock()
+				onlineMut.RUnlock()
 				if !isOnline {
-					mut.Lock() // expensive operation. better to check it first instead of blindly locking
+					onlineMut.Lock() // expensive operation. better to check it first instead of blindly locking
 					servers[i].Online = true
-					mut.Unlock()
+					onlineMut.Unlock()
 				}
 			}
 			time.Sleep(2 * time.Second)
