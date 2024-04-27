@@ -52,7 +52,7 @@ func (s *server) connBegin() *func() {
 }
 
 func Init(method int) chan ServerConn {
-	serverStream = make(chan ServerConn, 10000)
+	serverStream = make(chan ServerConn, 10000) //buffer size
 
 	jsonFile, err := os.Open("./servers.json")
 	if err != nil {
