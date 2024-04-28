@@ -6,16 +6,15 @@ import (
 	"io"
 	"os"
 	"sync"
-	"time"
 )
 
 const RR = 1
 const LC = 2
 
 var servers []server // contains all server addresses from the JSON and their current active connection/s
-// var serverStream chan ServerConn // for sharing only the server addresses and closures for decreasing the active connection count
 var onlineMut sync.RWMutex
 var activeConnMut sync.Mutex
+var healthCheckWG sync.WaitGroup
 
 type server struct {
 	Address    string `json:"address"`
@@ -43,7 +42,6 @@ func (s *server) connBegin() *func(method int) {
 	var connBegin = func(method int) {
 		if method == RR {
 			activeConnMut.Lock()
-			fmt.Println("incremented HAHAHAHAHA")
 			s.ActiveConn++
 			activeConnMut.Unlock()
 		}
@@ -52,8 +50,7 @@ func (s *server) connBegin() *func(method int) {
 }
 
 func Init(method int) chan ServerConn {
-	// serverStream = make(chan ServerConn, 10000) //buffer size
-
+	healthCheckWG.Add(1)
 	jsonFile, err := os.Open("./servers.json")
 	if err != nil {
 		fmt.Println(err)
@@ -69,9 +66,9 @@ func Init(method int) chan ServerConn {
 		fmt.Println(err1)
 	}
 
-	go healthCheckInit(servers, &activeConnMut, &onlineMut)
+	go healthCheckInit(servers, &activeConnMut, &onlineMut, &healthCheckWG)
 
-	time.Sleep(5 * time.Second) // use a better approach, maybe some type of signalling that initial checks are complete
+	healthCheckWG.Wait()
 
 	return getNextServer(method)
 }

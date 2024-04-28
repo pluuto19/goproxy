@@ -27,24 +27,17 @@ func (s *serverHeap) Pop() any {
 }
 
 func leastConnInit(servers []server, activeConn *sync.Mutex, onlineMut *sync.RWMutex) chan ServerConn {
-	// check in connbeg and connend and if its LC dont increase and decrease once. instead increase once here.
 	unbufServerStream = make(chan ServerConn)
-
 	sHeap := make(serverHeap, len(servers))
 	copy(sHeap, servers)
 	heap.Init(&sHeap)
-
-	//for len(sHeap) > 0 {
-	//	fmt.Println(heap.Pop(&sHeap))
-	//}
-	//
 	go LCPopulateChannel(sHeap, activeConn, onlineMut)
+
 	return unbufServerStream
 }
 
 func LCPopulateChannel(sHeap serverHeap, mut *sync.Mutex, onlineMut *sync.RWMutex) {
 	for {
-		// peek the minimum then increase its active conn then fix it
 		onlineMut.RLock()
 		isServerOnline := sHeap[0].Online
 		onlineMut.RUnlock()
@@ -55,7 +48,7 @@ func LCPopulateChannel(sHeap serverHeap, mut *sync.Mutex, onlineMut *sync.RWMute
 			mut.Lock()
 			sHeap[0].ActiveConn++
 			mut.Unlock()
-			// Call connBegin with the appropriate method
+
 			unbufServerStream <- ServerConn{
 				ServerAddr: sHeap[0].Address,
 				ConnEnd:    sHeap[0].connEnd(),

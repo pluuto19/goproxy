@@ -11,7 +11,7 @@ import (
 
 var hcPtr = 0
 
-func healthCheckInit(serversSlice []server, activeConnMut *sync.Mutex, onlineMut *sync.RWMutex) {
+func healthCheckInit(serversSlice []server, activeConnMut *sync.Mutex, onlineMut *sync.RWMutex, healthCheckWG *sync.WaitGroup) {
 	fmt.Println("Initial Health Check starting ...")
 	for i := range serversSlice {
 		respBuffer := make([]byte, 1024)
@@ -61,13 +61,12 @@ func healthCheckInit(serversSlice []server, activeConnMut *sync.Mutex, onlineMut
 		}
 	}
 	fmt.Println("Beginning Default Health Checks")
+	healthCheckWG.Done()
 	go healthCheck(serversSlice, activeConnMut, onlineMut)
 }
 
 func healthCheck(serversSlice []server, activeConnMut *sync.Mutex, onlineMut *sync.RWMutex) {
 	for {
-		//fmt.Println("Health Checking " + serversSlice[hcPtr].Address)
-
 		respBuffer := make([]byte, 1024)
 		tcpAddr, err := net.ResolveTCPAddr("tcp4", serversSlice[hcPtr].Address)
 		if err != nil {
@@ -116,7 +115,6 @@ func healthCheck(serversSlice []server, activeConnMut *sync.Mutex, onlineMut *sy
 		if hcPtr%len(serversSlice) == 0 {
 			hcPtr = 0
 		}
-		//fmt.Println("Response from server:", string(respBuffer[:n]))
 		time.Sleep(1 * time.Second)
 	}
 }
