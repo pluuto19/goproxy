@@ -30,7 +30,7 @@ func main() {
 	}
 }
 func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock net.Conn) {
-
+	fmt.Println("got request")
 	clientRecvBuffer := make([]byte, bufSize)
 
 	n, err := clientConnSock.Read(clientRecvBuffer)
@@ -51,6 +51,8 @@ func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock n
 		serverConn = serverConnQueue
 		isServerOnline = *serverConn.IsOnline
 	}
+
+	fmt.Println("Pulled " + serverConn.ServerAddr + " from the channel")
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", serverConn.ServerAddr)
 	if err != nil {

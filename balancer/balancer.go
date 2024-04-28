@@ -29,21 +29,19 @@ type ServerConn struct {
 	IsOnline   *bool
 }
 
-func (s *server) connEnd() *func() {
-	var connEnd = func() {
-		fmt.Println("about to decrement from " + s.Address)
-		fmt.Println(time.Now().Format(time.RFC3339Nano))
-		activeConnMut.Lock()
-		s.ActiveConn--
-		activeConnMut.Unlock()
+func (s *server) connEnd() *func(method int) {
+	var connEnd = func(method int) {
+		if method == RR {
+			activeConnMut.Lock()
+			s.ActiveConn--
+			activeConnMut.Unlock()
+		}
 	}
 	return &connEnd
 }
 
 func (s *server) connBegin() *func() {
 	var connBegin = func() {
-		fmt.Println("about to increase " + s.Address)
-		fmt.Println(time.Now().Format(time.RFC3339Nano))
 		activeConnMut.Lock()
 		s.ActiveConn++
 		activeConnMut.Unlock()
@@ -70,6 +68,8 @@ func Init(method int) chan ServerConn {
 	}
 
 	go healthCheckInit(servers, &onlineMut)
+
+	time.Sleep(5 * time.Second) // use a better approach, maybe some type of signalling that initial checks are complete
 
 	getNextServer(method)
 

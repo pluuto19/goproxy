@@ -1,6 +1,9 @@
 package balancer
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 var rrPtr = 0 // for selecting the next server in Round Robin fashion
 
@@ -11,7 +14,10 @@ func roundRobinInit(serverStream chan ServerConn, servers []server, mut *sync.RW
 		isServerOnline := servers[rrPtr].Online
 		mut.RUnlock()
 		if isServerOnline {
+			//fmt.Println("Adding " + servers[rrPtr].Address + " to channel")
 			serverStream <- ServerConn{servers[rrPtr].Address, servers[rrPtr].connEnd(), servers[rrPtr].connBegin(), &isServerOnline}
+		} else {
+			fmt.Println(servers[rrPtr].Address + " was not online")
 		}
 		rrPtr++
 		if rrPtr%len(servers) == 0 {
