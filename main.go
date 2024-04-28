@@ -7,9 +7,10 @@ import (
 )
 
 const bufSize = 1536
+const method = balancer.LC
 
 func main() {
-	serverStream := balancer.Init(balancer.RR)
+	serverStream := balancer.Init(method)
 
 	serverSpec, err := net.ResolveTCPAddr("tcp", "localhost:8080")
 	if err != nil {
@@ -66,7 +67,7 @@ func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock n
 		return
 	}
 
-	(*serverConn.ConnBegin)() // increment after resolving the address, when the actual connection is established
+	(*serverConn.ConnBegin)(method) // increment after resolving the address, when the actual connection is established
 
 	_, err1 := backendConnSock.Write(clientRecvBuffer[0:n])
 	if err1 != nil {
@@ -80,7 +81,7 @@ func serveConcurrRequest(serverStream chan balancer.ServerConn, clientConnSock n
 		return
 	}
 	err2 := backendConnSock.Close()
-
+	fmt.Println("decremented " + serverConn.ServerAddr)
 	(*serverConn.ConnEnd)()
 
 	if err2 != nil {

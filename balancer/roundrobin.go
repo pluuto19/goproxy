@@ -22,7 +22,7 @@ func RRPopulateChannel(servers []server, mut *sync.RWMutex) {
 		mut.RUnlock()
 		if isServerOnline {
 			//fmt.Println("Adding " + servers[rrPtr].Address + " to channel")
-			bufServerStream <- ServerConn{servers[rrPtr].Address, servers[rrPtr].connEnd(), servers[rrPtr].connBegin(RR), &isServerOnline}
+			bufServerStream <- ServerConn{servers[rrPtr].Address, servers[rrPtr].connEnd(), servers[rrPtr].connBegin(), &isServerOnline}
 		} else {
 			fmt.Println(servers[rrPtr].Address + " was not online")
 		}

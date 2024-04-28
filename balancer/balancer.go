@@ -25,7 +25,7 @@ type server struct {
 type ServerConn struct {
 	ServerAddr string
 	ConnEnd    *func()
-	ConnBegin  *func()
+	ConnBegin  *func(method int)
 	IsOnline   *bool
 }
 
@@ -39,10 +39,11 @@ func (s *server) connEnd() *func() {
 	return &connEnd
 }
 
-func (s *server) connBegin(method int) *func() {
-	var connBegin = func() {
+func (s *server) connBegin() *func(method int) {
+	var connBegin = func(method int) {
 		if method == RR {
 			activeConnMut.Lock()
+			fmt.Println("incremented HAHAHAHAHA")
 			s.ActiveConn++
 			activeConnMut.Unlock()
 		}
@@ -68,7 +69,7 @@ func Init(method int) chan ServerConn {
 		fmt.Println(err1)
 	}
 
-	go healthCheckInit(servers, &onlineMut)
+	go healthCheckInit(servers, &activeConnMut, &onlineMut)
 
 	time.Sleep(5 * time.Second) // use a better approach, maybe some type of signalling that initial checks are complete
 
@@ -80,7 +81,7 @@ func getNextServer(method int) chan ServerConn {
 	case RR:
 		return roundRobinInit(servers, &onlineMut)
 	case LC:
-		return leastConnInit(servers, &onlineMut)
+		return leastConnInit(servers, &activeConnMut, &onlineMut)
 	default:
 		return nil
 	}
