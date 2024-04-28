@@ -9,7 +9,7 @@ import (
 const bufSize = 1536
 
 func main() {
-	serverStream := balancer.Init(balancer.LC)
+	serverStream := balancer.Init(balancer.RR)
 
 	serverSpec, err := net.ResolveTCPAddr("tcp", "localhost:8080")
 	if err != nil {

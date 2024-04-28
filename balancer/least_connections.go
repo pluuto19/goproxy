@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+var unbufServerStream chan ServerConn
+
 type serverHeap []server
 
 func (s serverHeap) Len() int           { return len(s) }
@@ -24,15 +26,23 @@ func (s *serverHeap) Pop() any {
 	return x
 }
 
-func leastConnInit(serverStream chan ServerConn, servers []server, onlineMut *sync.RWMutex) {
-	// make a minheap of servers based on connection count
-	// fill an unbuffered channel with instances fetched from heap in an inf for loop
+func leastConnInit(servers []server, onlineMut *sync.RWMutex) chan ServerConn {
 	// check in connbeg and connend and if its LC dont increase and decrease once. instead increase once here.
+	unbufServerStream = make(chan ServerConn)
+
 	sHeap := make(serverHeap, len(servers))
 	copy(sHeap, servers)
 	heap.Init(&sHeap)
 	for len(sHeap) > 0 {
 		fmt.Println(heap.Pop(&sHeap))
+	}
+	go LCPopulateChannel(sHeap, onlineMut)
+	return unbufServerStream
+}
+
+func LCPopulateChannel(sHeap serverHeap, onlineMut *sync.RWMutex) {
+	for {
+
 	}
 }
 
