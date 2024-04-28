@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"sync"
-	"time"
 )
 
 const RR = 1
@@ -29,22 +28,23 @@ type ServerConn struct {
 	IsOnline   *bool
 }
 
-func (s *server) connEnd() *func(method int) {
-	var connEnd = func(method int) {
-		if method == RR {
-			activeConnMut.Lock()
-			s.ActiveConn--
-			activeConnMut.Unlock()
-		}
+func (s *server) connEnd() *func() {
+	var connEnd = func() {
+		activeConnMut.Lock()
+		s.ActiveConn--
+		activeConnMut.Unlock()
+
 	}
 	return &connEnd
 }
 
-func (s *server) connBegin() *func() {
+func (s *server) connBegin(method int) *func() {
 	var connBegin = func() {
-		activeConnMut.Lock()
-		s.ActiveConn++
-		activeConnMut.Unlock()
+		if method == RR {
+			activeConnMut.Lock()
+			s.ActiveConn++
+			activeConnMut.Unlock()
+		}
 	}
 	return &connBegin
 }
@@ -67,9 +67,9 @@ func Init(method int) chan ServerConn {
 		fmt.Println(err1)
 	}
 
-	go healthCheckInit(servers, &onlineMut)
+	//go healthCheckInit(servers, &onlineMut)
 
-	time.Sleep(5 * time.Second) // use a better approach, maybe some type of signalling that initial checks are complete
+	//time.Sleep(5 * time.Second) // use a better approach, maybe some type of signalling that initial checks are complete
 
 	getNextServer(method)
 

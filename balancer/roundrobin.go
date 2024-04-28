@@ -15,7 +15,7 @@ func roundRobinInit(serverStream chan ServerConn, servers []server, mut *sync.RW
 		mut.RUnlock()
 		if isServerOnline {
 			//fmt.Println("Adding " + servers[rrPtr].Address + " to channel")
-			serverStream <- ServerConn{servers[rrPtr].Address, servers[rrPtr].connEnd(), servers[rrPtr].connBegin(), &isServerOnline}
+			serverStream <- ServerConn{servers[rrPtr].Address, servers[rrPtr].connEnd(), servers[rrPtr].connBegin(RR), &isServerOnline}
 		} else {
 			fmt.Println(servers[rrPtr].Address + " was not online")
 		}
